@@ -2,20 +2,12 @@
 
 int POS_X, POS_Y;
 
-std::string model_name = "planetas/moon.obj";
+std::string model_name = "planetas/earth.obj";
 
 float pos_x = 0, pos_y = 0, pos_z = 0;
-float fovy = 45.f;
-GLfloat light_pos[] = {0, 0, 0, 1};
-float angle_x = 0, earth_rotate = 0, angle_2 = 0;
+float angle_x = 0, earth_rotate = 0, moon_rotate = 0;
 int x_old, y_old;
-// angle of rotation for the camera direction
-float angle = 0.0;
-// actual vector representing the camera's direction
-float lx = 1.f, lz = -1.f;
-// XZ position of the camera
-float camera_x = 4.f, camera_z = 20.f;
-bool esta_segurando_o_mouse = false;
+bool esta_segurando_o_mouse = false, update = true;
 Model model;
 
 void initLights()
@@ -47,15 +39,13 @@ void init()
     glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(fovy, 1.0, 1.0, 2000.0);
+    gluPerspective(45, 1.0, 1.0, 2000.0);
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_LINE_SMOOTH);
     initTextures();
     glEnable(GL_DEPTH_TEST);
-
-    model.load(model_name.c_str());
 }
 
 void drawEixos()
@@ -88,7 +78,10 @@ void display()
     glMatrixMode(GL_MODELVIEW);
     initLights();
     glLoadIdentity();
-    glTranslatef(0.f, 0.f, -500);
+    glTranslatef(0.f, 0.f, -20);
+
+    model.load("planetas/earth.obj");
+    //mercurio
     glPushMatrix();
     glTranslatef(pos_x, pos_y, pos_z);
     glRotatef(angle_x, 0, 1, 0);
@@ -96,26 +89,51 @@ void display()
     glVertex3f(0, 0, 0);
     glEnd();
     glPushMatrix();
-    glTranslatef(150, 0, -6);
+    glTranslatef(5, 0, -6);
+    // glScalef(0.2, 0.2, 0.2);
+    glRotatef(earth_rotate, 0, 1, 0);
+    model.draw();
+    model.load("planetas/moon.obj");
+    glTranslatef(80, 0, -80);
+    glScalef(0.2, 0.2, 0.2);
     glRotatef(earth_rotate, 0, 1, 0);
     model.draw();
     glPopMatrix();
     glPopMatrix();
+
+    // //venus
+    // glPushMatrix();
+    // glTranslatef(pos_x, pos_y, pos_z);
+    // glRotatef(angle_x, 0, 1, 0);
+    // glBegin(GL_POINTS);
+    // glVertex3f(0, 0, 0);
+    // glEnd();
+    // glPushMatrix();
+    // glTranslatef(80, 0, -80);
+    // glScalef(0.2, 0.2, 0.2);
+    // glRotatef(earth_rotate, 0, 1, 0);
+    // model.draw();
+    // glPopMatrix();
+    // glPopMatrix();
+
     glutSwapBuffers();
 }
 
 void timer(int value)
 {
-    earth_rotate += 15;
-    angle_2 += 15;
-    angle_x += 9;
+    if (update)
+    {
+        earth_rotate += 15;
+        moon_rotate += 15;
+        angle_x += 9;
+    }
     if (angle_x > 360)
     {
         angle_x = 0;
     }
-    if (angle_2 > 360)
+    if (moon_rotate > 360)
     {
-        angle_2 = 0;
+        moon_rotate = 0;
     }
     if (earth_rotate > 360)
     {
@@ -169,32 +187,15 @@ void motion(int x, int y)
     }
 }
 
-void processSpecialKeys(int key, int x, int y)
+void keyboard(unsigned char key, int x, int y)
 {
-    float fraction = 0.2f;
     switch (key)
     {
-    case GLUT_KEY_LEFT:
-        angle -= 0.01f;
-        lx = sin(angle);
-        lz = -cos(angle);
-        break;
-    case GLUT_KEY_RIGHT:
-        angle += 0.01f;
-        lx = sin(angle);
-        lz = -cos(angle);
-        break;
-    case GLUT_KEY_UP:
-        camera_x += lx * fraction;
-        camera_z += lz * fraction;
-        break;
-    case GLUT_KEY_DOWN:
-        camera_x -= lx * fraction;
-        camera_z -= lz * fraction;
+    case 'p':
+        update = !update;
         break;
     }
 }
-
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
@@ -211,7 +212,7 @@ int main(int argc, char **argv)
     glutDisplayFunc(display);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
-    glutSpecialFunc(processSpecialKeys);
+    glutKeyboardFunc(keyboard);
     glutTimerFunc(100, timer, 0);
     glutMainLoop();
     return 0;
