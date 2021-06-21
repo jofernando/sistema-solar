@@ -2,13 +2,12 @@
 
 int POS_X, POS_Y;
 
-std::string model_name = "planetas/earth.obj";
 
 float pos_x = 0, pos_y = 0, pos_z = 0;
 float angle_x = 0, earth_rotate = 0, moon_rotate = 0;
 int x_old, y_old;
 bool esta_segurando_o_mouse = false, update = true;
-Model model;
+Model earth, moon;
 
 void initLights()
 {
@@ -46,6 +45,8 @@ void init()
     glEnable(GL_LINE_SMOOTH);
     initTextures();
     glEnable(GL_DEPTH_TEST);
+    earth.load("planetas/earth.obj");
+    moon.load("planetas/moon.obj");
 }
 
 void drawEixos()
@@ -80,7 +81,6 @@ void display()
     glLoadIdentity();
     glTranslatef(0.f, 0.f, -20);
 
-    model.load("planetas/earth.obj");
     //mercurio
     glPushMatrix();
     glTranslatef(pos_x, pos_y, pos_z);
@@ -92,12 +92,11 @@ void display()
     glTranslatef(5, 0, -6);
     // glScalef(0.2, 0.2, 0.2);
     glRotatef(earth_rotate, 0, 1, 0);
-    model.draw();
-    model.load("planetas/moon.obj");
-    glTranslatef(80, 0, -80);
-    glScalef(0.2, 0.2, 0.2);
+    earth.draw();
+    glTranslatef(4, 0, -4);
+    glScalef(0.29, 0.29, 0.29);
     glRotatef(earth_rotate, 0, 1, 0);
-    model.draw();
+    moon.draw();
     glPopMatrix();
     glPopMatrix();
 

@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.erb": "erb",
-        "random": "cpp"
+        "random": "cpp",
+        "atomic": "cpp"
     }
 }
