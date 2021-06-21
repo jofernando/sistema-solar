@@ -2,7 +2,7 @@
 
 int POS_X, POS_Y;
 
-std::string model_name = "planetas/moon.obj";
+std::string model_name = "planetas/earth.obj";
 
 float pos_x = 0, pos_y = 0, pos_z = 0;
 float fovy = 45.f;
@@ -18,95 +18,65 @@ float camera_x = 4.f, camera_z = 20.f;
 bool esta_segurando_o_mouse = false;
 Model model;
 
-void initLights()
-{
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glShadeModel(GL_SMOOTH);
-    glEnable(GL_COLOR_MATERIAL);
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-    GLfloat light_position[] = {pos_x, pos_y, pos_z, 1};
-    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-    GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
-    GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
-    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
-}
-
-void initTextures()
-{
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glEnable(GL_TEXTURE_2D);
-}
-
 void init()
 {
-    glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(fovy, 1.0, 1.0, 2000.0);
-    glMatrixMode(GL_MODELVIEW);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_LINE_SMOOTH);
-    initTextures();
     glEnable(GL_DEPTH_TEST);
-
+    glShadeModel(GL_SMOOTH);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_COLOR_MATERIAL);
+    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+    glClearColor(0.4f, 0.4f, 0.4f, 1.0f);
     model.load(model_name.c_str());
-}
-
-void drawEixos()
-{
-    // glColor3f(0.9f, 0.9f, 0.9f);
-    // glBegin(GL_LINES);
-    // glVertex3f(-100.0f, 0.0f, 0);
-    // glVertex3f(100.0f, 0.0f, 0);
-    // glEnd();
-    // glBegin(GL_LINES);
-    // glVertex3f(.0f, 100.0f, 0);
-    // glVertex3f(.0f, -100.0f, 0);
-    // glEnd();
-    // glBegin(GL_LINES);
-    // glVertex3f(.0f, 0.0f, 100);
-    // glVertex3f(.0f, 0.0f, -100);
-    // glEnd();
-    glColor3f(0.9f, 0.9f, 0.9f);
-    glBegin(GL_QUADS);
-    glVertex3f(-100.0f, 0.0f, -100.0f);
-    glVertex3f(-100.0f, 0.0f, 100.0f);
-    glVertex3f(100.0f, 0.0f, 100.0f);
-    glVertex3f(100.0f, 0.0f, -100.0f);
-    glEnd();
 }
 
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
-    initLights();
     glLoadIdentity();
-    glTranslatef(0.f, 0.f, -500);
-    glPushMatrix();
-    glTranslatef(pos_x, pos_y, pos_z);
+    glTranslatef(0, 0, -20);
+
+    // desenha um ponto no centro para servir de apoio
     glRotatef(angle_x, 0, 1, 0);
     glBegin(GL_POINTS);
     glVertex3f(0, 0, 0);
     glEnd();
+
+    //ativa as luzes e configura os parametros da luz 0
+    glEnable(GL_LIGHTING);
+    GLfloat light_position[] = {0.0, 0.0, 0.0, 1};
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    GLfloat light_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+    GLfloat light_ambient[] = {0.0, 0.0, 0.0, 1.0};
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+
+    //desenha o que deveria ser mercurio
     glPushMatrix();
-    glTranslatef(150, 0, -6);
     glRotatef(earth_rotate, 0, 1, 0);
+    glTranslatef(0, 0, -10.0);
     model.draw();
     glPopMatrix();
-    glPopMatrix();
+
+    // troca os buffers
     glutSwapBuffers();
+}
+
+void resize(int w, int h)
+{
+    // define the visible area of the window ( in pixels )
+    if (h == 0)
+        h = 1;
+    glViewport(0, 0, w, h);
+    // Setup viewing volume
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(60.0, (float)w / (float)h, 1.0, 1000.0);
 }
 
 void timer(int value)
 {
-    earth_rotate += 15;
+    earth_rotate += 6;
     angle_2 += 15;
     angle_x += 9;
     if (angle_x > 360)
@@ -209,9 +179,10 @@ int main(int argc, char **argv)
     glutCreateWindow("sistema solar");
     init();
     glutDisplayFunc(display);
+    glutReshapeFunc(resize);
     glutMouseFunc(mouse);
-    glutMotionFunc(motion);
-    glutSpecialFunc(processSpecialKeys);
+    // glutMotionFunc(motion);
+    // glutSpecialFunc(processSpecialKeys);
     glutTimerFunc(100, timer, 0);
     glutMainLoop();
     return 0;

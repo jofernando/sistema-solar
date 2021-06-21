@@ -11,10 +11,7 @@
 #include <map>
 #include <vector>
 
-// #include "../Library/loadpng.h"
-// #include "../Library/process_image.h"
-
-// #include "../Library/gl_texture.h"
+#include "lodepng.h"
 
 #define WIDTH 600
 #define HEIGHT 600
@@ -127,17 +124,18 @@ class Model {
                     sscanf(line.c_str(), "Ks %f %f %f", &s[0], &s[1], &s[2]);
                     break;
                 }
-            // } else if (line[0] == 'm' && line[1] == 'a') {
-            //     sscanf(line.c_str(), "map_Kd %s", str);
-            //     std::string file = prefix + str;
-            //     Image img;
-            //     Load_Texture_Swap(&img, file.c_str());
-            //     glGenTextures(1, &(m->texture));
-            //     glBindTexture(GL_TEXTURE_2D, m->texture);
-            //     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            //     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, img.w, img.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.img);
-            //     glBindTexture(GL_TEXTURE_2D, 0);
-            //     Delete_Image(&img);
+            } else if (line[0] == 'm' && line[1] == 'a') {
+                sscanf(line.c_str(), "map_Kd %s", str);
+                std::string file = prefix + str;
+                unsigned int width, height;
+                unsigned char *data;
+                lodepng_decode_file(&data, &width, &height, file.c_str(), LCT_RGBA, 8);
+                glGenTextures(1, &(m->texture));
+                glBindTexture(GL_TEXTURE_2D, m->texture);
+                glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                free(data);
             }
         }
     }
@@ -285,10 +283,12 @@ class Model {
         for (Face &face : faces) {
             if (face.edge == -1) {
                 has_texcoord = false;
-                glLightfv(GL_LIGHT0, GL_AMBIENT, materials[face.normal].ambient);
-                glLightfv(GL_LIGHT0, GL_DIFFUSE, materials[face.normal].diffuse);
-                glLightfv(GL_LIGHT0, GL_SPECULAR, materials[face.normal].specular);
-                if (materials[face.normal].texture != 0) {
+                // glLightfv(GL_LIGHT0, GL_AMBIENT, materials[face.normal].ambient);
+                // glLightfv(GL_LIGHT0, GL_DIFFUSE, materials[face.normal].diffuse);
+                // glLightfv(GL_LIGHT0, GL_SPECULAR, materials[face.normal].specular);
+                glColor3f(materials[face.normal].diffuse[0], materials[face.normal].diffuse[1], materials[face.normal].diffuse[2]);
+                if (materials[face.normal].texture != 0)
+                {
                     has_texcoord = true;
                     glBindTexture(GL_TEXTURE_2D, materials[face.normal].texture);
                 }
@@ -296,8 +296,8 @@ class Model {
             }
             if (face.normal != -1)
                 glNormal3fv(normals[face.normal]);
-            else
-                glDisable(GL_LIGHTING);
+            // else
+            //     glDisable(GL_LIGHTING);
             if (has_texcoord) {
                 glBegin(GL_POLYGON);
                 for (int i = 0; i < face.edge; i++) {
@@ -311,8 +311,8 @@ class Model {
                     glVertex3fv(vertices[face.vertices[i]]);
                 glEnd();
             }
-            if (face.normal == -1)
-                glEnable(GL_LIGHTING);
+            // if (face.normal == -1)
+            //     glEnable(GL_LIGHTING);
         }
         glEndList();
 
