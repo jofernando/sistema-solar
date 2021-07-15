@@ -18,35 +18,31 @@
 
 #define INTERVAL 15
 
-class Model {
-  private:
-    static int count_char(std::string &str, char ch) {
+class Model
+{
+private:
+    static int count_char(std::string &str, char ch)
+    {
         int c = 0;
         int length = str.length() - 1;
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++)
+        {
             if (str[i] == ch)
                 c++;
         }
         return c;
     }
 
-    static bool has_double_slash(std::string &str) {
-        int length = str.length() - 2;
-        for (int i = 0; i < length; i++) {
-            if (str[i] == '/' && str[i + 1] == '/')
-                return true;
-        }
-        return false;
-    }
-
-    class Material {
-      public:
+    class Material
+    {
+    public:
         float *ambient;
         float *diffuse;
         float *specular;
         GLuint texture;
 
-        Material(float *ambient, float *diffuse, float *specular) {
+        Material(float *ambient, float *diffuse, float *specular)
+        {
             this->ambient = ambient;
             this->diffuse = diffuse;
             this->specular = specular;
@@ -54,14 +50,16 @@ class Model {
         }
     };
 
-    class Face {
-      public:
+    class Face
+    {
+    public:
         int edge;
         int *vertices;
         int *texcoords;
         int normal;
 
-        Face(int edge, int *vertices, int *texcoords, int normal = -1) {
+        Face(int edge, int *vertices, int *texcoords, int normal = -1)
+        {
             this->edge = edge;
             this->vertices = vertices;
             this->texcoords = texcoords;
@@ -80,16 +78,19 @@ class Model {
 
     GLuint list;
 
-    void load_material(const char *filename) {
+    void load_material(const char *filename)
+    {
         std::string line;
         std::vector<std::string> lines;
         std::ifstream in(filename);
-        if (!in.is_open()) {
+        if (!in.is_open())
+        {
             printf("Cannot load material %s\n", filename);
             return;
         }
 
-        while (!in.eof()) {
+        while (!in.eof())
+        {
             std::getline(in, line);
             lines.push_back(line);
         }
@@ -101,8 +102,10 @@ class Model {
         std::string material;
         float *a, *d, *s;
 
-        for (std::string &line : lines) {
-            if (line[0] == 'n' && line[1] == 'e') {
+        for (std::string &line : lines)
+        {
+            if (line[0] == 'n' && line[1] == 'e')
+            {
                 sscanf(line.c_str(), "newmtl %s", str);
                 material = str;
                 map_material[material] = count_material;
@@ -112,8 +115,11 @@ class Model {
                 s = new float[4]{0.0f, 0.0f, 0.0f, 1.0f};
                 materials.push_back(Material(a, d, s));
                 m = &materials[materials.size() - 1];
-            } else if (line[0] == 'K') {
-                switch (line[1]) {
+            }
+            else if (line[0] == 'K')
+            {
+                switch (line[1])
+                {
                 case 'a':
                     sscanf(line.c_str(), "Ka %f %f %f", &a[0], &a[1], &a[2]);
                     break;
@@ -124,7 +130,9 @@ class Model {
                     sscanf(line.c_str(), "Ks %f %f %f", &s[0], &s[1], &s[2]);
                     break;
                 }
-            } else if (line[0] == 'm' && line[1] == 'a') {
+            }
+            else if (line[0] == 'm' && line[1] == 'a')
+            {
                 sscanf(line.c_str(), "map_Kd %s", str);
                 std::string file = prefix + str;
                 unsigned int width, height;
@@ -134,35 +142,13 @@ class Model {
                 glBindTexture(GL_TEXTURE_2D, m->texture);
                 glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-                glBindTexture(GL_TEXTURE_2D, 0);
                 free(data);
             }
         }
     }
 
-    void add_face_3v(std::string &line) {
-        int v0, v1, v2;
-        sscanf(line.c_str(), "f %d %d %d", &v0, &v1, &v2);
-        int *v = new int[3]{v0 - 1, v1 - 1, v2 - 1};
-        faces.push_back(Face(3, v, NULL));
-    }
-
-    void add_face_3vt(std::string &line) {
-        int v0, v1, v2, t0, t1, t2;
-        sscanf(line.c_str(), "f %d/%d %d/%d %d/%d", &v0, &t0, &v1, &t1, &v2, &t2);
-        int *v = new int[3]{v0 - 1, v1 - 1, v2 - 1};
-        int *t = new int[3]{t0 - 1, t1 - 1, t2 - 1};
-        faces.push_back(Face(3, v, t));
-    }
-
-    void add_face_3vn(std::string &line) {
-        int v0, v1, v2, n;
-        sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v0, &n, &v1, &n, &v2, &n);
-        int *v = new int[3]{v0 - 1, v1 - 1, v2 - 1};
-        faces.push_back(Face(3, v, NULL, n - 1));
-    }
-
-    void add_face_3vtn(std::string &line) {
+    void add_face_3(std::string &line)
+    {
         int v0, v1, v2, t0, t1, t2, n;
         sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v0, &t0, &n, &v1, &t1, &n, &v2, &t2, &n);
         int *v = new int[3]{v0 - 1, v1 - 1, v2 - 1};
@@ -170,29 +156,8 @@ class Model {
         faces.push_back(Face(3, v, t, n - 1));
     }
 
-    void add_face_4v(std::string &line) {
-        int v0, v1, v2, v3;
-        sscanf(line.c_str(), "f %d %d %d %d", &v0, &v1, &v2, &v3);
-        int *v = new int[4]{v0 - 1, v1 - 1, v2 - 1, v3 - 1};
-        faces.push_back(Face(4, v, NULL));
-    }
-
-    void add_face_4vt(std::string &line) {
-        int v0, v1, v2, v3, t0, t1, t2, t3;
-        sscanf(line.c_str(), "f %d/%d %d/%d %d/%d %d/%d", &v0, &t0, &v1, &t1, &v2, &t2, &v3, &t3);
-        int *v = new int[4]{v0 - 1, v1 - 1, v2 - 1, v3 - 1};
-        int *t = new int[4]{t0 - 1, t1 - 1, t2 - 1, t3 - 1};
-        faces.push_back(Face(4, v, t));
-    }
-
-    void add_face_4vn(std::string &line) {
-        int v0, v1, v2, v3, n;
-        sscanf(line.c_str(), "f %d//%d %d//%d %d//%d %d//%d", &v0, &n, &v1, &n, &v2, &n, &v3, &n);
-        int *v = new int[4]{v0 - 1, v1 - 1, v2 - 1, v3 - 1};
-        faces.push_back(Face(4, v, NULL, n - 1));
-    }
-
-    void add_face_4vtn(std::string &line) {
+    void add_face_4(std::string &line)
+    {
         int v0, v1, v2, v3, t0, t1, t2, t3, n;
         sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d", &v0, &t0, &n, &v1, &t1, &n, &v2, &t2, &n, &v3,
                &t3, &n);
@@ -201,8 +166,9 @@ class Model {
         faces.push_back(Face(4, v, t, n - 1));
     }
 
-  public:
-    void load(const char *filename) {
+public:
+    void load(const char *filename)
+    {
         std::string tmp = filename;
         prefix = "";
         int n = tmp.find_last_of('/') + 1;
@@ -212,63 +178,58 @@ class Model {
         std::string line;
         std::vector<std::string> lines;
         std::ifstream in(filename);
-        if (!in.is_open()) {
+        if (!in.is_open())
+        {
             printf("Cannot load model %s\n", filename);
             return;
         }
 
-        while (!in.eof()) {
+        while (!in.eof())
+        {
             std::getline(in, line);
             lines.push_back(line);
         }
         in.close();
 
-        float a, b, c;
+        float x, y, z;
         char str[40];
 
-        for (std::string &line : lines) {
-            if (line[0] == 'v') {
-                if (line[1] == ' ') {
-                    sscanf(line.c_str(), "v %f %f %f", &a, &b, &c);
-                    vertices.push_back(new float[3]{a, b, c});
-                } else if (line[1] == 't') {
-                    sscanf(line.c_str(), "vt %f %f", &a, &b);
-                    texcoords.push_back(new float[2]{a, b});
-                } else {
-                    sscanf(line.c_str(), "vn %f %f %f", &a, &b, &c);
-                    normals.push_back(new float[3]{a, b, c});
+        for (std::string &line : lines)
+        {
+            if (line[0] == 'v')
+            {
+                if (line[1] == ' ')
+                {
+                    sscanf(line.c_str(), "v %f %f %f", &x, &y, &z);
+                    vertices.push_back(new float[3]{x, y, z});
                 }
-            } else if (line[0] == 'f') {
+                else if (line[1] == 't')
+                {
+                    sscanf(line.c_str(), "vt %f %f", &x, &y);
+                    texcoords.push_back(new float[2]{x, y});
+                }
+                else
+                {
+                    sscanf(line.c_str(), "vn %f %f %f", &x, &y, &z);
+                    normals.push_back(new float[3]{x, y, z});
+                }
+            }
+            else if (line[0] == 'f')
+            {
                 int edge = count_char(line, ' ');
-                int count_slash = count_char(line, '/');
-                if (count_slash == 0) {
-                    if (edge == 3)
-                        add_face_3v(line);
-                    else
-                        add_face_4v(line);
-                } else if (count_slash == edge) {
-                    if (edge == 3)
-                        add_face_3vt(line);
-                    else
-                        add_face_4vt(line);
-                } else if (count_slash == edge * 2) {
-                    if (has_double_slash(line)) {
-                        if (edge == 3)
-                            add_face_3vn(line);
-                        else
-                            add_face_4vn(line);
-                    } else {
-                        if (edge == 3)
-                            add_face_3vtn(line);
-                        else
-                            add_face_4vtn(line);
-                    }
-                }
-            } else if (line[0] == 'm' && line[1] == 't') {
+                if (edge == 3)
+                    add_face_3(line);
+                else
+                    add_face_4(line);
+            }
+            else if (line[0] == 'm' && line[1] == 't')
+            {
                 sscanf(line.c_str(), "mtllib %s", &str);
                 std::string file = prefix + str;
                 load_material(file.c_str());
-            } else if (line[0] == 'u' && line[1] == 's') {
+            }
+            else if (line[0] == 'u' && line[1] == 's')
+            {
                 sscanf(line.c_str(), "usemtl %s", &str);
                 std::string material = str;
                 if (map_material.find(material) != map_material.end())
@@ -280,8 +241,10 @@ class Model {
 
         list = glGenLists(1);
         glNewList(list, GL_COMPILE);
-        for (Face &face : faces) {
-            if (face.edge == -1) {
+        for (Face &face : faces)
+        {
+            if (face.edge == -1)
+            {
                 has_texcoord = false;
                 // glLightfv(GL_LIGHT0, GL_AMBIENT, materials[face.normal].ambient);
                 // glLightfv(GL_LIGHT0, GL_DIFFUSE, materials[face.normal].diffuse);
@@ -296,23 +259,23 @@ class Model {
             }
             if (face.normal != -1)
                 glNormal3fv(normals[face.normal]);
-            // else
-            //     glDisable(GL_LIGHTING);
-            if (has_texcoord) {
+            if (has_texcoord)
+            {
                 glBegin(GL_POLYGON);
-                for (int i = 0; i < face.edge; i++) {
+                for (int i = 0; i < face.edge; i++)
+                {
                     glTexCoord2fv(texcoords[face.texcoords[i]]);
                     glVertex3fv(vertices[face.vertices[i]]);
                 }
                 glEnd();
-            } else {
+            }
+            else
+            {
                 glBegin(GL_POLYGON);
                 for (int i = 0; i < face.edge; i++)
                     glVertex3fv(vertices[face.vertices[i]]);
                 glEnd();
             }
-            // if (face.normal == -1)
-            //     glEnable(GL_LIGHTING);
         }
         glEndList();
 
@@ -323,7 +286,8 @@ class Model {
         printf("Faces: %d\n", faces.size());
         printf("Materials: %d\n", materials.size());
 
-        for (Material &material : materials) {
+        for (Material &material : materials)
+        {
             delete material.ambient;
             delete material.diffuse;
             delete material.specular;
